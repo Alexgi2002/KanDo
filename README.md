@@ -1,6 +1,12 @@
 # KanDo - App Móvil de Tareas (Prueba Técnica Android / Kotlin)
 
-KanDo es una aplicación móvil desarrollada en Kotlin y Jetpack Compose como parte de la prueba técnica de desarrollo Android. La app permite gestionar tareas con persistencia local offline (SQLite), sincronización inicial desde una API pública (`JSONPlaceholder`), filtros por estado, creación de tareas con formulario validado y cambios de estado dinámicos.
+KanDo es una aplicación móvil desarrollada en Kotlin y Jetpack Compose como parte de la prueba técnica de desarrollo Android. La app permite gestionar tareas con persistencia local offline (SQLite), sincronización inicial desde una API pública (`JSONPlaceholder`), vista de tablero Kanban con pestañas y paginación, cambio rápido de estado mediante menús desplegables y una arquitectura MVVM robusta desacoplada con Koin.
+
+<p align="center">
+  <img src="imgs/Screenshot_1.png" width="250" alt="Kanban View" style="margin: 10px;" />
+  <img src="imgs/Screenshot_2.png" width="250" alt="Task Detail View" style="margin: 10px;" />
+  <img src="imgs/Screenshot_3.png" width="250" alt="Create Task View" style="margin: 10px;" />
+</p>
 
 ---
 
@@ -21,59 +27,62 @@ KanDo es una aplicación móvil desarrollada en Kotlin y Jetpack Compose como pa
      ```
 
 3. **Ejecución de Tests**:
-   - Para ejecutar los tests unitarios:
+   - Para ejecutar los tests unitarios (JVM):
      ```bash
      ./gradlew testDebugUnitTest
+     ```
+   - Para ejecutar los tests de integración en dispositivo/emulador:
+     ```bash
+     ./gradlew connectedAndroidTest
      ```
 
 ---
 
-## 2. Decisiones Técnicas Tomadas
+## 2. Decisiones Técnicas y Características Principales
 
 - **Lenguaje & UI**: Desarrollado 100% en **Kotlin** y **Jetpack Compose** con Material 3, garantizando una interfaz moderna, reactiva y adaptativa.
-- **Arquitectura (MVVM)**: Separación clara en capas:
-  - **Domain**: Modelos de datos (`Task`, `TaskStatus`).
-  - **Data**: Repositorio (`TaskRepository`), servicio API REST con **Retrofit + Gson** (`TodoApiService`), y base de datos local **SQLite** (`TaskDbHelper`).
-  - **UI**: ViewModels (`TaskViewModel`) manejando estado reactivo (`StateFlow`) y pantallas Compose (`TaskListScreen`, `CreateTaskScreen`).
-- **Persistencia Local (Offline-First)**: Uso de SQLite nativo (`SQLiteOpenHelper`) para un rendimiento excelente, almacenamiento offline robusto y cero dependencias de compilación complejas.
-- **Sincronización API Pública**: En la primera carga, la app consume tareas desde [https://jsonplaceholder.typicode.com/todos](https://jsonplaceholder.typicode.com/todos), mapeando el estado booleano `completed` a `DONE` o `PENDING`, y las almacena en SQLite.
-- **Manejo de Errores de Red**: Captura de excepciones de red y visualización amigable al usuario mediante un banner de advertencia/error con opción de reintento, permitiendo el uso offline continuo de la aplicación con los datos locales existentes.
+- **Arquitectura (MVVM)**: Estructura MVVM limpia y organizada en paquetes:
+  - **Model (`model/`)**: Modelos de datos (`Task`, `TaskStatus`).
+  - **Data (`data/`)**: Base de datos local SQLite (`TaskDbHelper`) y servicio API REST con **Retrofit + Gson** (`TodoApiService`).
+  - **ViewModel (`viewmodel/`)**: `TaskViewModel` que gestiona el estado reactivo (`StateFlow`) y conecta las fuentes de datos con la UI.
+  - **View (`view/`)**: Pantallas en Compose (`TaskListScreen`, `CreateTaskScreen`, `TaskDetailScreen`).
+- **Inyección de Dependencias (Koin)**: Implementación de **Koin** para la inyección de dependencias (`KanDoApp.kt` y `appModule`), inyectando `TaskDbHelper`, `TodoApiService` y `TaskViewModel` de manera desacoplada.
+- **Tablero Kanban con Pager y Tabs**:
+  - Uso de `PrimaryTabRow` y `HorizontalPager` para navegar entre los estados de las tareas (*Pendientes*, *En curso*, *Hechas*) deslizando o tocando las pestañas.
+- **Selector Rápido de Estado (`DropdownMenu`)**:
+  - Las tarjetas de tareas permiten cambiar su estado instantáneamente tocando el distintivo de estado (*Badge*), abriendo un menú desplegable ágil.
+- **Top App Bars Colapsables**:
+  - Las pantallas de detalle y nueva tarea implementan `MediumTopAppBar` con comportamiento de colapso al hacer scroll (`exitUntilCollapsedScrollBehavior`).
+- **Navegación y Botón Atrás del Sistema (`BackHandler`)**:
+  - Control de gestos hacia atrás para navegar de regreso a la lista principal en lugar de salir de la aplicación.
+- **Persistencia Local (Offline-First)**:
+  - Uso de SQLite nativo (`SQLiteOpenHelper`) para almacenamiento offline robusto.
+- **Sincronización y Manejo de Errores**:
+  - Carga inicial desde [https://jsonplaceholder.typicode.com/todos](https://jsonplaceholder.typicode.com/todos). Mensajes de error y avisos de red completamente localizados en **español** para informar al usuario si trabaja en modo offline.
 
 ---
 
 ## 3. Qué Haría con Más Tiempo
 
-- **Inyección de Dependencias**: Integrar **Hilt** para inyección de dependencias a escala empresarial.
-- **Base de Datos Avanzada**: Migrar a **Room** con migraciones complejas (o SQLDelight) si se requiere tipado reactivo de base de datos con Flow.
-- **Sincronización Bidireccional / Cola Offline**: Implementar una cola de sincronización en segundo plano (WorkManager) para subir modificaciones locales cuando se recupere la conexión a internet.
-- **Tests Instrumentados y UI Tests**: Añadir tests de UI más exhaustivos con Compose Testing (ej. probar el flujo completo de creación de tareas y filtrado).
+- **Base de Datos Avanzada**: Migrar a **Room** con migraciones complejas (o SQLDelight) si se requiere tipado reactivo avanzado con Flow.
+- **Buscador**: Agregar buscador de tareas a la lista principal.
+- **Drag & Drop**: Agregar soporte de arrastrar y soltar a la lista de tareas.
 - **Animaciones y Accesibilidad**: Mejorar transiciones entre pantallas y etiquetas de accesibilidad (`contentDescription`).
+- **Estados dinamicos**: Capacidad de crear, eliminar y organizar los estados de las tareas.
 
 ---
 
 ## 4. Uso de la Inteligencia Artificial
 
 - **Qué le pediste**:
-  - Estructuración inicial de la arquitectura MVVM y diseño de componentes con Jetpack Compose Material 3.
-  - Implementación del helper de SQLite y el servicio Retrofit para consumir JSONPlaceholder.
-  - Redacción del README y soporte para estructurar los casos de test unitarios y de UI.
+  - Estructuración inicial de la arquitectura MVVM y configuración de Koin.
+  - Implementación del helper de SQLite, el servicio Retrofit para JSONPlaceholder y los tests unitarios/integración.
+  - Redacción del README y soporte para resolver incidencias de compilación y comportamiento de UI en Compose.
 - **Qué aceptaste**:
-  - La estructura modular limpia (capas `data`, `domain`, `ui`) y la gestión de estados reactivos con `StateFlow`.
-  - El diseño de la interfaz con `FilterChip`, tarjetas de tareas (`TaskItemCard`) y manejo de errores con banners animados.
+  - La arquitectura MVVM simplificada con Koin para la inyección de dependencias.
+  - El diseño del tablero Kanban con pestañas, paginación y menús desplegables para cambio rápido de estado.
 - **Qué corregiste / Ajustaste**:
-  - Adaptación de dependencias de compilación para garantizar compatibilidad con la versión de Kotlin y AGP del entorno.
-  - Ajuste en el mapeo de estados de la API (`completed` -> `TaskStatus.DONE` / `PENDING`).
-  - Validación estricta del formulario de creación de tareas (título obligatorio con mínimo 3 caracteres).
-
----
-
-## 5. Historial de Commits / Progreso
-
-Siguiendo la recomendación de realizar commits a medida que se avanza:
-1. `init: setup project structure and dependencies`
-2. `feat: add domain models and SQLite local persistence helper`
-3. `feat: add Retrofit API service and TaskRepository for offline-first sync`
-4. `feat: implement MVVM TaskViewModel with state management and filtering`
-5. `feat: implement Jetpack Compose UI (TaskListScreen & CreateTaskScreen)`
-6. `test: add unit tests and UI widget tests`
-7. `docs: add comprehensive README with technical test documentation`
+  - Adaptación de la estructura de paquetes a `model`, `data`, `viewmodel` y `view`.
+  - Refinamiento de la navegación con `BackHandler` y persistencia de pestañas al regresar de los detalles.
+  - Traducción y pulido de los mensajes de error de red al español.
+  - Algunos colores o textos salidos de sitio.
