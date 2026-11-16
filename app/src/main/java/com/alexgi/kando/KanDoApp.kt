@@ -25,5 +25,5 @@ class KanDoApp : Application() {
 val appModule = module {
     single { TaskDbHelper(get()) }
     single { TodoApiService.create() }
-    viewModel { TaskViewModel(get(), get(), get()) }
+    viewModel { TaskViewModel(get(), get()) }
 }

@@ -1,7 +1,6 @@
 package com.alexgi.kando.viewmodel
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.alexgi.kando.data.local.TaskDbHelper
 import com.alexgi.kando.data.remote.TodoApiService
@@ -18,23 +17,16 @@ import kotlinx.coroutines.withContext
 data class TaskUiState(
     val tasks: List<Task> = emptyList(),
     val filteredTasks: List<Task> = emptyList(),
-    val currentFilter: TaskStatus? = null,
+    val currentFilter: TaskStatus = TaskStatus.PENDING,
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
     val isCreatingTask: Boolean = false
 )
 
 class TaskViewModel(
-    application: Application,
     private val dbHelper: TaskDbHelper,
     private val apiService: TodoApiService
-) : AndroidViewModel(application) {
-
-    constructor(application: Application) : this(
-        application,
-        TaskDbHelper(application),
-        TodoApiService.create()
-    )
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(TaskUiState())
     val uiState: StateFlow<TaskUiState> = _uiState.asStateFlow()
@@ -54,7 +46,7 @@ class TaskViewModel(
                         isLoading = false,
                         tasks = local,
                         filteredTasks = filterTasksList(local, it.currentFilter),
-                        errorMessage = "Network error: Unable to load remote tasks. Showing offline local tasks."
+                        errorMessage = "Sin conexión a internet o el servidor tardó demasiado. Mostrando tareas locales."
                     )
                 }
             } else {
@@ -64,7 +56,7 @@ class TaskViewModel(
                         isLoading = false,
                         tasks = tasks,
                         filteredTasks = filterTasksList(tasks, it.currentFilter),
-                        errorMessage = if (syncResult.isFailure) "Network warning: Could not refresh from API. Using local data." else null
+                        errorMessage = if (syncResult.isFailure) "Aviso: No se pudo actualizar con la API. Usando datos guardados localmente." else null
                     )
                 }
             }
@@ -92,7 +84,7 @@ class TaskViewModel(
         }
     }
 
-    fun setFilter(status: TaskStatus?) {
+    fun setFilter(status: TaskStatus) {
         _uiState.update { state ->
             state.copy(
                 currentFilter = status,
@@ -155,7 +147,7 @@ class TaskViewModel(
         _uiState.update { it.copy(errorMessage = null) }
     }
 
-    private fun filterTasksList(tasks: List<Task>, filter: TaskStatus?): List<Task> {
-        return if (filter == null) tasks else tasks.filter { it.status == filter }
+    private fun filterTasksList(tasks: List<Task>, filter: TaskStatus): List<Task> {
+        return tasks.filter { it.status == filter }
     }
 }

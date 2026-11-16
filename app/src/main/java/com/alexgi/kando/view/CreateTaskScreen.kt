@@ -1,11 +1,15 @@
 package com.alexgi.kando.view
 
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import com.alexgi.kando.model.TaskStatus
 import com.alexgi.kando.viewmodel.TaskViewModel
@@ -21,19 +25,19 @@ fun CreateTaskScreen(
     var selectedStatus by remember { mutableStateOf(TaskStatus.PENDING) }
     var titleError by remember { mutableStateOf(false) }
 
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+
     Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            TopAppBar(
+            MediumTopAppBar(
                 title = { Text("Nueva Tarea") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                )
+                scrollBehavior = scrollBehavior
             )
         }
     ) { padding ->
@@ -41,6 +45,7 @@ fun CreateTaskScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .verticalScroll(rememberScrollState())
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
@@ -52,6 +57,7 @@ fun CreateTaskScreen(
                 },
                 label = { Text("Título *") },
                 isError = titleError,
+                shape = RoundedCornerShape(16.dp),
                 supportingText = {
                     if (titleError) {
                         Text("El título debe tener al menos 3 caracteres", color = MaterialTheme.colorScheme.error)
@@ -65,6 +71,7 @@ fun CreateTaskScreen(
                 value = description,
                 onValueChange = { description = it },
                 label = { Text("Descripción (opcional)") },
+                shape = RoundedCornerShape(16.dp),
                 modifier = Modifier.fillMaxWidth(),
                 minLines = 3,
                 maxLines = 5
@@ -93,7 +100,7 @@ fun CreateTaskScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(24.dp))
 
             Button(
                 onClick = {

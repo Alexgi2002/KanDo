@@ -6,6 +6,7 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
@@ -31,17 +32,21 @@ class MainActivity : ComponentActivity() {
             KanDoTheme {
                 val viewModel: com.alexgi.kando.viewmodel.TaskViewModel by viewModel()
                 var currentScreen by remember { mutableStateOf<Screen>(Screen.List) }
+                var selectedTab by remember { mutableIntStateOf(0) }
 
                 BackHandler(enabled = currentScreen !is Screen.List) {
                     currentScreen = Screen.List
                 }
 
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                Scaffold(
+                    contentWindowInsets = WindowInsets(0, 0, 0, 0)) { innerPadding ->
                     Box(modifier = Modifier.padding(innerPadding)) {
                         when (val screen = currentScreen) {
                             is Screen.List -> {
                                 TaskListScreen(
                                     viewModel = viewModel,
+                                    selectedTab = selectedTab,
+                                    onTabSelected = { selectedTab = it },
                                     onNavigateToCreate = { currentScreen = Screen.Create },
                                     onNavigateToDetail = { taskId -> currentScreen = Screen.Detail(taskId) }
                                 )
