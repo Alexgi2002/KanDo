@@ -1,18 +1,19 @@
 package com.alexgi.kando.view
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.alexgi.kando.model.Task
 import com.alexgi.kando.model.TaskStatus
@@ -22,7 +23,8 @@ import com.alexgi.kando.viewmodel.TaskViewModel
 @Composable
 fun TaskListScreen(
     viewModel: TaskViewModel,
-    onNavigateToCreate: () -> Unit
+    onNavigateToCreate: () -> Unit,
+    onNavigateToDetail: (Long) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -140,12 +142,7 @@ fun TaskListScreen(
                     items(uiState.filteredTasks, key = { it.id }) { task ->
                         TaskItemCard(
                             task = task,
-                            onStatusChange = { newStatus ->
-                                viewModel.updateTaskStatus(task.id, newStatus)
-                            },
-                            onDelete = {
-                                viewModel.deleteTask(task.id)
-                            }
+                            onClick = { onNavigateToDetail(task.id) }
                         )
                     }
                 }
@@ -157,84 +154,39 @@ fun TaskListScreen(
 @Composable
 fun TaskItemCard(
     task: Task,
-    onStatusChange: (TaskStatus) -> Unit,
-    onDelete: () -> Unit
+    onClick: () -> Unit
 ) {
     Card(
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = task.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.weight(1f)
-                )
-                IconButton(onClick = onDelete) {
-                    Icon(
-                        Icons.Default.Delete,
-                        contentDescription = "Eliminar",
-                        tint = MaterialTheme.colorScheme.error
-                    )
-                }
-            }
+            Text(
+                text = task.title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
 
             if (task.description.isNotBlank()) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = task.description,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                StatusBadge(status = task.status)
-
-                // Action buttons to change status
-                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    if (task.status != TaskStatus.PENDING) {
-                        OutlinedButton(
-                            onClick = { onStatusChange(TaskStatus.PENDING) },
-                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
-                        ) {
-                            Text("Pendiente", style = MaterialTheme.typography.labelSmall)
-                        }
-                    }
-                    if (task.status != TaskStatus.IN_PROGRESS) {
-                        OutlinedButton(
-                            onClick = { onStatusChange(TaskStatus.IN_PROGRESS) },
-                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
-                        ) {
-                            Text("En curso", style = MaterialTheme.typography.labelSmall)
-                        }
-                    }
-                    if (task.status != TaskStatus.DONE) {
-                        Button(
-                            onClick = { onStatusChange(TaskStatus.DONE) },
-                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
-                        ) {
-                            Text("Hecha", style = MaterialTheme.typography.labelSmall)
-                        }
-                    }
-                }
-            }
+            StatusBadge(status = task.status)
         }
     }
 }
